@@ -1,5 +1,5 @@
 const GEMINI_URL =
-  "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent";
+  "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent";
 
 export const chatWithGemini = async (message) => {
   if (!process.env.GEMINI_API_KEY) {
