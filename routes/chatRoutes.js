@@ -12,6 +12,9 @@ const limiter = rateLimit({
 
 router.post("/", limiter, async (req, res) => {
   try {
+    console.log("CHAT BODY:", req.body);
+    console.log("GEMINI KEY LOADED:", !!process.env.GEMINI_API_KEY);
+
     const { message } = req.body;
 
     if (!message) {
@@ -19,15 +22,16 @@ router.post("/", limiter, async (req, res) => {
     }
 
     const response = await chatWithGemini(message);
-
     res.json({ response });
+
   } catch (error) {
-    console.error("Gemini Error:", error.message);
+    console.error("CHAT ROUTE ERROR:", error);
     res.status(500).json({
       response:
         "I'm here with you, but something went wrong. Please try again.",
     });
   }
 });
+
 
 export default router;
