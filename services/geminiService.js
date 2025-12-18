@@ -1,34 +1,45 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import axios from "axios";
 
-if (!process.env.GEMINI_API_KEY) {
-  throw new Error("❌ GEMINI_API_KEY is not set in environment variables");
-}
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const GEMINI_URL =
+  "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent";
 
 export const chatWithGemini = async (message) => {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY is not set");
+  }
+
   try {
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.0-pro",
-    });
+    const res = await axios.post(
+      `${GEMINI_URL}?key=${process.env.GEMINI_API_KEY}`,
+      {
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `
+You are a calm, empathetic mental wellness assistant.
+Respond kindly, briefly, and supportively.
 
-    const prompt = `
-     You are a calm, empathetic mental wellness assistant.
-     Respond kindly, briefly, and supportively.
+User: ${message}
+                `,
+              },
+            ],
+          },
+        ],
+      }
+    );
 
-     User: ${message}
-     Assistant:
-     `;
+    const text =
+      res.data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    const result = await model.generateContent(prompt);
-
-    if (!result?.response?.text) {
+    if (!text) {
       throw new Error("Empty response from Gemini");
     }
 
-    return result.response.text();
+    return text;
   } catch (err) {
-    console.error("🔥 Gemini SDK Error:", err);
+    console.error("🔥 Gemini REST Error:", err.response?.data || err.message);
     throw err;
   }
 };
