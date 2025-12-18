@@ -1,5 +1,3 @@
-import axios from "axios";
-
 const GEMINI_URL =
   "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent";
 
@@ -8,10 +6,14 @@ export const chatWithGemini = async (message) => {
     throw new Error("GEMINI_API_KEY is not set");
   }
 
-  try {
-    const res = await axios.post(
-      `${GEMINI_URL}?key=${process.env.GEMINI_API_KEY}`,
-      {
+  const res = await fetch(
+    `${GEMINI_URL}?key=${process.env.GEMINI_API_KEY}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         contents: [
           {
             role: "user",
@@ -27,19 +29,22 @@ User: ${message}
             ],
           },
         ],
-      }
-    );
-
-    const text =
-      res.data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!text) {
-      throw new Error("Empty response from Gemini");
+      }),
     }
+  );
 
-    return text;
-  } catch (err) {
-    console.error("🔥 Gemini REST Error:", err.response?.data || err.message);
-    throw err;
+  if (!res.ok) {
+    const err = await res.text();
+    console.error("🔥 Gemini REST Error:", err);
+    throw new Error("Gemini API request failed");
   }
+
+  const data = await res.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (!text) {
+    throw new Error("Empty response from Gemini");
+  }
+
+  return text;
 };
